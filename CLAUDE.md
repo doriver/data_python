@@ -42,3 +42,6 @@
 - `official_land_price_to_db.py` : 개별공시지가 SHP를 읽어 MySQL에 `official_land_price_seoul` 테이블이 없으면 생성하고(`coordinates`에 `SPATIAL INDEX` 포함), row를 배치 삽입합니다 (`INSERT_BATCH_SIZE = 500`).
 - `docs/shp_to_db.md` — 위 스크립트의 스펙/노트(스키마 + 컬럼 매핑). 참고 문서라기보다 작업 지시서 형태로 작성되어 있으며, SHP→DB 매핑의 한 예시가 있습니다.
 
+## Notes
+
+* 주석을 마음대로 지우지 말것

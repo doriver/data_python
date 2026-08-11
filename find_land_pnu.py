@@ -16,8 +16,9 @@ CSV_USECOLS = ["고유번호", "법정동명", "지번", "지목명", "용도지
 HEADER_ROW = 12  # 실제 표 헤더가 있는 엑셀 행(0-index)
 OUTPUT_DIR = "data/processed"
 OUTPUT_PATH = os.path.join(OUTPUT_DIR, "20250806_20260805_토지(매매)_실거래가_매핑.xlsx")
-DATA_START_ROW = 3  # 0-index. 상단 3행(전체/성공 건수, 빈 줄)을 남기고 그 아래부터 표 작성
-AREA_TOLERANCE = 0.02
+DATA_START_ROW = 5  # 0-index. 상단 4행(전체/제외/처리대상/성공 건수) + 빈 줄을 남기고 그 아래부터 표 작성
+AREA_TOLERANCE = 0.01
+EMPTY_VALUE = "-"  # 실제 거래된거를 나타내는 값( 해제된경우는 날짜 들어가있음 )
 
 
 def parse_beonji(raw: str):
@@ -32,7 +33,14 @@ def parse_beonji(raw: str):
 
 def main():
     deals = pd.read_excel(XLSX_PATH, header=HEADER_ROW)
-    print(f"실거래가 전체 건수: {len(deals)}")
+    total_count = len(deals)
+    print(f"실거래가 전체 건수: {total_count}")
+
+    cancelled_mask = deals["해제사유발생일"].notna() & (deals["해제사유발생일"] != EMPTY_VALUE)
+    cancelled_count = cancelled_mask.sum()
+    print(f"해제사유발생일 있어 제외된 건수: {cancelled_count}")
+    deals = deals[~cancelled_mask].reset_index(drop=True)
+    actual_target_count = total_count - cancelled_count
 
     needed_dongs = set(deals["시군구"].unique())
 
@@ -85,16 +93,17 @@ def main():
     deals["PNU"] = matched_pnu
     deals["확정번지"] = matched_beonji
 
-    total_count = len(deals)
     success_count = deals["PNU"].notna().sum()
-    print(f"매칭 성공 건수: {success_count} / {total_count}")
+    print(f"매칭 성공 건수: {success_count} / {actual_target_count}")
 
     os.makedirs(OUTPUT_DIR, exist_ok=True)
     with pd.ExcelWriter(OUTPUT_PATH, engine="openpyxl") as writer:
         deals.to_excel(writer, sheet_name="실거래가", index=False, startrow=DATA_START_ROW)
         sheet = writer.sheets["실거래가"]
         sheet["A1"] = f"전체 건수: {total_count}"
-        sheet["A2"] = f"매칭 성공 건수: {success_count}"
+        sheet["A2"] = f"해제사유발생일 있어 제외된 건수: {cancelled_count}"
+        sheet["A3"] = f"실제 처리 대상: {actual_target_count}"
+        sheet["A4"] = f"매칭 성공 건수: {success_count}"
 
     print(f"완료: {OUTPUT_PATH}")
 

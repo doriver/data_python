@@ -20,7 +20,7 @@ if sys.stdout.encoding.lower() != "utf-8":
 
 load_dotenv()
 
-SHP_PATH = "data/AL_D150_41_20260526.shp"
+SHP_PATH = "data/AL_D150_41_20260526(2).shp"
 TABLE_NAME = "individual_land_price_gyeonggi"
 INSERT_BATCH_SIZE = 500
 

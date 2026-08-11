@@ -85,7 +85,10 @@ def main():
         hits = dong_candidates[mask]
         if len(hits) == 1:
             matched_pnu.append(hits["고유번호"].iloc[0])
-            matched_beonji.append(hits["지번"].iloc[0])
+            beonji = hits["지번"].iloc[0]
+            if row.번지.startswith("산"):
+                beonji = f"산 {beonji}"
+            matched_beonji.append(beonji)
         else:
             matched_pnu.append(None)
             matched_beonji.append(None)

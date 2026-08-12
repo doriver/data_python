@@ -25,7 +25,7 @@ SHP_PATH = "data/AL_D150_41_20260526(2).shp"
 TABLE_NAME = "individual_land_price_gyeonggi"
 INSERT_BATCH_SIZE = 2000
 # 삽입에 실패한 행을 모아두는 파일. --retry-failed 로 실행하면 이 파일에 있는 행만 재시도한다.
-FAILED_ROWS_PATH = f"data/processed/{TABLE_NAME}_failed_rows.pkl"
+FAILED_ROWS_PATH = f"db_error/{TABLE_NAME}_failed_rows.pkl"
 
 DB_HOST = os.environ.get("MYSQL_HOST", "127.0.0.1")
 DB_PORT = int(os.environ.get("MYSQL_PORT", "3307"))

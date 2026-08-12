@@ -14,14 +14,14 @@ venv\Scripts\python.exe individual_land_price_gyeonggi_shp_to_db.py
 
 ### 모두 성공한 경우
 
-콘솔에 `완료: N건 삽입`이 출력된다. 이전 실행에서 남아 있던 실패 데이터 파일(`data/processed/individual_land_price_gyeonggi_failed_rows.pkl`)이 있었다면 자동으로 삭제된다.
+콘솔에 `완료: N건 삽입`이 출력된다. 이전 실행에서 남아 있던 실패 데이터 파일(`db_error/individual_land_price_gyeonggi_failed_rows.pkl`)이 있었다면 자동으로 삭제된다.
 
 ### 일부 실패한 경우
 
-실패한 행이 있으면 `data/processed/individual_land_price_gyeonggi_failed_rows.pkl` 파일에 저장되고, 콘솔에 아래와 같은 안내가 출력된다.
+실패한 행이 있으면 `db_error/individual_land_price_gyeonggi_failed_rows.pkl` 파일에 저장되고, 콘솔에 아래와 같은 안내가 출력된다.
 
 ```
-실패 N건을 data/processed/individual_land_price_gyeonggi_failed_rows.pkl 에 저장했습니다. --retry-failed 로 재시도하세요.
+실패 N건을 db_error/individual_land_price_gyeonggi_failed_rows.pkl 에 저장했습니다. --retry-failed 로 재시도하세요.
 ```
 
 성공한 행은 이미 커밋되어 있으므로, 실패한 행만 별도로 다시 시도하면 된다.

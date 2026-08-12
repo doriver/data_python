@@ -8,14 +8,15 @@ import pandas as pd
 if sys.stdout.encoding.lower() != "utf-8":
     sys.stdout.reconfigure(encoding="utf-8")
 
-XLSX_PATH = "data/raw/20250806_20260805_토지(매매)_실거래가.xlsx"
+XLSX_PATH = "data/raw/20240806_20250805_토지(매매)_실거래가.xlsx"
 CSV_PATH = "data/basis/AL_D195_41_20260519.csv"
 CSV_ENCODING = "cp949"
 CSV_CHUNK_SIZE = 200_000
 CSV_USECOLS = ["고유번호", "법정동명", "지번", "지목명", "용도지역명1", "토지면적", "대장구분명"]
 HEADER_ROW = 12  # 실제 표 헤더가 있는 엑셀 행(0-index)
 OUTPUT_DIR = "data/processed"
-OUTPUT_PATH = os.path.join(OUTPUT_DIR, "20250806_20260805_토지(매매)_실거래가_매핑.xlsx")
+_xlsx_name, _xlsx_ext = os.path.splitext(os.path.basename(XLSX_PATH))
+OUTPUT_PATH = os.path.join(OUTPUT_DIR, f"{_xlsx_name}_매핑{_xlsx_ext}")
 DATA_START_ROW = 5  # 0-index. 상단 4행(전체/제외/처리대상/성공 건수) + 빈 줄을 남기고 그 아래부터 표 작성
 AREA_TOLERANCE = 0.01
 EMPTY_VALUE = "-"  # 실제 거래된거를 나타내는 값( 해제된경우는 날짜 들어가있음 )

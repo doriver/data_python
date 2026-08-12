@@ -12,7 +12,7 @@ XLSX_PATH = "data/raw/20250806_20260805_토지(매매)_실거래가.xlsx"
 CSV_PATH = "data/basis/AL_D195_41_20260519.csv"
 CSV_ENCODING = "cp949"
 CSV_CHUNK_SIZE = 200_000
-CSV_USECOLS = ["고유번호", "법정동명", "지번", "지목명", "용도지역명1", "토지면적"]
+CSV_USECOLS = ["고유번호", "법정동명", "지번", "지목명", "용도지역명1", "토지면적", "대장구분명"]
 HEADER_ROW = 12  # 실제 표 헤더가 있는 엑셀 행(0-index)
 OUTPUT_DIR = "data/processed"
 OUTPUT_PATH = os.path.join(OUTPUT_DIR, "20250806_20260805_토지(매매)_실거래가_매핑.xlsx")
@@ -68,6 +68,7 @@ def main():
             matched_beonji.append(None)
             continue
 
+        is_san = row.번지.startswith("산")
         prefix, digit_count = parse_beonji(row.번지)
         mask = (
             (dong_candidates["지목명"] == row.지목)
@@ -75,6 +76,10 @@ def main():
             & (dong_candidates["본번"].str.len() == digit_count)
             & (dong_candidates["본번"].str.startswith(prefix))
         )
+        if is_san:
+            mask &= dong_candidates["대장구분명"] == "산"
+        else:
+            mask &= dong_candidates["대장구분명"] != "산"
         if pd.isna(row.지분구분):
             mask &= (dong_candidates["토지면적"] > row.계약면적 - AREA_TOLERANCE) & (
                 dong_candidates["토지면적"] < row.계약면적 + AREA_TOLERANCE
@@ -86,7 +91,7 @@ def main():
         if len(hits) == 1:
             matched_pnu.append(hits["고유번호"].iloc[0])
             beonji = hits["지번"].iloc[0]
-            if row.번지.startswith("산"):
+            if is_san:
                 beonji = f"산 {beonji}"
             matched_beonji.append(beonji)
         else:

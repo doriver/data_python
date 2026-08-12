@@ -22,7 +22,7 @@ load_dotenv()
 
 SHP_PATH = "data/AL_D150_41_20260526(2).shp"
 TABLE_NAME = "individual_land_price_gyeonggi"
-INSERT_BATCH_SIZE = 500
+INSERT_BATCH_SIZE = 2000
 
 DB_HOST = os.environ.get("MYSQL_HOST", "127.0.0.1")
 DB_PORT = int(os.environ.get("MYSQL_PORT", "3307"))
@@ -137,10 +137,10 @@ try:
         for i in range(0, len(rows), INSERT_BATCH_SIZE):
             batch = rows[i : i + INSERT_BATCH_SIZE]
             cursor.executemany(INSERT_SQL, batch)
+            conn.commit()
             inserted += len(batch)
             print(f"삽입 진행: {inserted}/{len(rows)}")
 
-    conn.commit()
     print(f"완료: {inserted}건 삽입")
 finally:
     conn.close()

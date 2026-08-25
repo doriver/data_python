@@ -26,15 +26,16 @@ def main():
     pnu_count = deals["PNU"].notna().sum()
     print(f"전체 행 수: {total_count}, PNU 있는 행 수: {pnu_count}")
 
-    # SHP 파일 읽기. 원본(투영) 좌표계에서 centroid(x, y)를 구한 뒤,
-    # 그 centroid 점만 위경도(EPSG:4326/WGS84) 좌표계로 변환한다.
+    # SHP 파일 읽기. 원본(투영) 좌표계에서 representative_point(폴리곤 내부가 보장되는 점)를
+    # 구한 뒤, 그 점만 위경도(EPSG:4326/WGS84) 좌표계로 변환한다.
+    # centroid(무게중심)는 오목한 필지에서 폴리곤 밖으로 벗어날 수 있어 사용하지 않는다.
     gdf = gpd.read_file(SHP_PATH, encoding=SHP_ENCODING)
     print(f"SHP 레코드 수: {len(gdf)}, 원본 좌표계(CRS): {gdf.crs}")
 
-    centroid = gdf.geometry.centroid
-    centroid_4326 = centroid.to_crs(epsg=4326)
-    lon_by_pnu = pd.Series(centroid_4326.x.values, index=gdf[SHP_PNU_FIELD])
-    lat_by_pnu = pd.Series(centroid_4326.y.values, index=gdf[SHP_PNU_FIELD])
+    point = gdf.geometry.representative_point()
+    point_4326 = point.to_crs(epsg=4326)
+    lon_by_pnu = pd.Series(point_4326.x.values, index=gdf[SHP_PNU_FIELD])
+    lat_by_pnu = pd.Series(point_4326.y.values, index=gdf[SHP_PNU_FIELD])
 
     deals["경도x"] = deals["PNU"].map(lon_by_pnu)
     deals["위도y"] = deals["PNU"].map(lat_by_pnu)

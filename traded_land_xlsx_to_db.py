@@ -21,7 +21,7 @@ if sys.stdout.encoding.lower() != "utf-8":
 
 load_dotenv()
 
-XLSX_PATH = "data/processed/서울25년_토지(매매)_실거래가_26매핑_좌표.xlsx"
+XLSX_PATH = "data/processed/서울25년_토지(매매)_실거래가_매핑_좌표.xlsx"
 HEADER_ROW = 5  # 실제 표 헤더가 있는 엑셀 행(0-index)
 LAND_TABLE_NAME = "traded_land"
 DETAIL_TABLE_NAME = "traded_land_detail"
@@ -44,6 +44,8 @@ CREATE TABLE IF NOT EXISTS {LAND_TABLE_NAME} (
     road_condition VARCHAR(20) NULL,
     cancellation_date VARCHAR(20) NULL,
     confirmed_beonji VARCHAR(20) NULL,
+    land_area DECIMAL(12,2) NULL,
+    official_land_price BIGINT NULL,
     coordinates POINT NOT NULL SRID 4326,
     PRIMARY KEY (id),
     INDEX idx_pnu (pnu),
@@ -71,10 +73,10 @@ CREATE TABLE IF NOT EXISTS {DETAIL_TABLE_NAME} (
 INSERT_LAND_SQL = f"""
 INSERT INTO {LAND_TABLE_NAME}
     (pnu, sigungu, beonji, land_category, use_district,
-     road_condition, cancellation_date, confirmed_beonji, coordinates)
+     road_condition, cancellation_date, confirmed_beonji, land_area, official_land_price, coordinates)
 VALUES
     (%s, %s, %s, %s, %s,
-     %s, %s, %s, ST_SRID(POINT(%s, %s), 4326))
+     %s, %s, %s, %s, %s, ST_SRID(POINT(%s, %s), 4326))
 """
 
 INSERT_DETAIL_SQL = f"""
@@ -127,6 +129,8 @@ for row in matched.itertuples(index=False):
                 none_if_dash(row.도로조건),
                 none_if_dash(row.해제사유발생일),
                 none_if_dash(row.확정번지),
+                none_if_dash(row.토지면적),
+                none_if_dash(row.공시지가),
                 none_if_dash(row.경도x),
                 none_if_dash(row.위도y),
             )

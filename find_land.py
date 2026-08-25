@@ -8,11 +8,11 @@ import pandas as pd
 if sys.stdout.encoding.lower() != "utf-8":
     sys.stdout.reconfigure(encoding="utf-8")
 
-XLSX_PATH = "data/raw/20240806_20250805_토지(매매)_실거래가.xlsx"
-CSV_PATH = "data/basis/AL_D195_41_20260519.csv"
+XLSX_PATH = "data/raw/서울25년_토지(매매)_실거래가.xlsx"
+CSV_PATH = "data/basis/서울토지특성정보_20260519.csv"
 CSV_ENCODING = "cp949"
 CSV_CHUNK_SIZE = 200_000
-CSV_USECOLS = ["고유번호", "법정동명", "지번", "지목명", "용도지역명1", "토지면적", "대장구분명"]
+CSV_USECOLS = ["고유번호", "법정동명", "지번", "지목명", "용도지역명1", "토지면적", "대장구분명", "공시지가"]
 HEADER_ROW = 12  # 실제 표 헤더가 있는 엑셀 행(0-index)
 OUTPUT_DIR = "data/processed"
 _xlsx_name, _xlsx_ext = os.path.splitext(os.path.basename(XLSX_PATH))
@@ -59,6 +59,7 @@ def main():
     # 지번은 "본번-부번" 형태이므로, 자리수/접두어 비교에 쓸 본번만 분리해둔다.
     candidates["본번"] = candidates["지번"].str.split("-", n=1).str[0]
     candidates["토지면적"] = candidates["토지면적"].astype(float)
+    candidates["공시지가"] = candidates["공시지가"].astype(float)
     print(f"토지 특성정보 후보 건수(대상 법정동 내): {len(candidates)}")
 
     # 매 실거래가 행마다 전체 후보를 스캔하지 않도록, 법정동명 기준으로 후보를 미리 나눠둔다.
@@ -66,12 +67,16 @@ def main():
 
     matched_pnu = []
     matched_beonji = []
+    matched_area = []
+    matched_official_price = []
     for row in deals.itertuples(index=False):
         # 1. 시군구 == 법정동명 이 일치하는 후보군으로 범위를 좁힌다. 후보가 없는 동이면 매칭 불가.
         dong_candidates = candidates_by_dong.get(row.시군구)
         if dong_candidates is None:
             matched_pnu.append(None)
             matched_beonji.append(None)
+            matched_area.append(None)
+            matched_official_price.append(None)
             continue
 
         # 2. 마스킹된 번지("1***", "산4*" 등)를 "산 여부 / 앞부분 접두어 / 전체 자리수"로 분해한다.
@@ -110,12 +115,18 @@ def main():
             if is_san:
                 beonji = f"산 {beonji}"
             matched_beonji.append(beonji)
+            matched_area.append(hits["토지면적"].iloc[0])
+            matched_official_price.append(hits["공시지가"].iloc[0])
         else:
             matched_pnu.append(None)
             matched_beonji.append(None)
+            matched_area.append(None)
+            matched_official_price.append(None)
 
     deals["PNU"] = matched_pnu
     deals["확정번지"] = matched_beonji
+    deals["토지면적"] = matched_area
+    deals["공시지가"] = matched_official_price
 
     success_count = deals["PNU"].notna().sum()
     print(f"매칭 성공 건수: {success_count} / {actual_target_count}")

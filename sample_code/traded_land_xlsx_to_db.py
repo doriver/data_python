@@ -21,7 +21,7 @@ if sys.stdout.encoding.lower() != "utf-8":
 
 load_dotenv()
 
-XLSX_PATH = "data/processed/서울25년_토지(매매)_실거래가_26매핑_좌표.xlsx"
+XLSX_PATH = "data/processed/20250806_20260805_토지(매매)_실거래가_매핑.xlsx"
 HEADER_ROW = 5  # 실제 표 헤더가 있는 엑셀 행(0-index)
 LAND_TABLE_NAME = "traded_land"
 DETAIL_TABLE_NAME = "traded_land_detail"
@@ -31,7 +31,7 @@ DB_HOST = os.environ.get("MYSQL_HOST", "127.0.0.1")
 DB_PORT = int(os.environ.get("MYSQL_PORT", "3307"))
 DB_USER = os.environ["MYSQL_USER"]
 DB_PASSWORD = os.environ["MYSQL_PASSWORD"]
-DB_NAME = os.environ.get("MYSQL_DATABASE", "data02")
+DB_NAME = os.environ.get("MYSQL_DATABASE", "data01")
 
 CREATE_LAND_TABLE_SQL = f"""
 CREATE TABLE IF NOT EXISTS {LAND_TABLE_NAME} (
@@ -44,10 +44,8 @@ CREATE TABLE IF NOT EXISTS {LAND_TABLE_NAME} (
     road_condition VARCHAR(20) NULL,
     cancellation_date VARCHAR(20) NULL,
     confirmed_beonji VARCHAR(20) NULL,
-    coordinates POINT NOT NULL SRID 4326,
     PRIMARY KEY (id),
-    INDEX idx_pnu (pnu),
-    SPATIAL INDEX idx_coordinates (coordinates)
+    INDEX idx_pnu (pnu)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 """
 
@@ -71,10 +69,10 @@ CREATE TABLE IF NOT EXISTS {DETAIL_TABLE_NAME} (
 INSERT_LAND_SQL = f"""
 INSERT INTO {LAND_TABLE_NAME}
     (pnu, sigungu, beonji, land_category, use_district,
-     road_condition, cancellation_date, confirmed_beonji, coordinates)
+     road_condition, cancellation_date, confirmed_beonji)
 VALUES
     (%s, %s, %s, %s, %s,
-     %s, %s, %s, ST_SRID(POINT(%s, %s), 4326))
+     %s, %s, %s)
 """
 
 INSERT_DETAIL_SQL = f"""
@@ -127,8 +125,6 @@ for row in matched.itertuples(index=False):
                 none_if_dash(row.도로조건),
                 none_if_dash(row.해제사유발생일),
                 none_if_dash(row.확정번지),
-                none_if_dash(row.경도x),
-                none_if_dash(row.위도y),
             )
         )
     detail_rows.append(

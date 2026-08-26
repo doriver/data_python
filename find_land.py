@@ -12,7 +12,7 @@ XLSX_PATH = "data/raw/서울25년_토지(매매)_실거래가.xlsx"
 CSV_PATH = "data/basis/서울토지특성정보_20260519.csv"
 CSV_ENCODING = "cp949"
 CSV_CHUNK_SIZE = 200_000
-CSV_USECOLS = ["고유번호", "법정동명", "지번", "지목명", "용도지역명1", "토지면적", "대장구분명", "공시지가"]
+CSV_USECOLS = ["고유번호", "법정동명", "지번", "지목명", "용도지역명1", "토지면적", "대장구분명", "공시지가", "도로접면코드"]
 HEADER_ROW = 12  # 실제 표 헤더가 있는 엑셀 행(0-index)
 OUTPUT_DIR = "data/processed"
 _xlsx_name, _xlsx_ext = os.path.splitext(os.path.basename(XLSX_PATH))
@@ -20,6 +20,13 @@ OUTPUT_PATH = os.path.join(OUTPUT_DIR, f"{_xlsx_name}_매핑{_xlsx_ext}")
 DATA_START_ROW = 5  # 0-index. 상단 4행(전체/제외/처리대상/성공 건수) + 빈 줄을 남기고 그 아래부터 표 작성
 AREA_TOLERANCE = 0.01
 EMPTY_VALUE = "-"  # 실제 거래된거를 나타내는 값( 해제된경우는 날짜 들어가있음 )
+ROAD_CONDITION_TO_ROAD_SIDE_CODES = {
+    "25m이상": {"01", "02", "03"},
+    "25m미만": {"04", "05"},
+    "12m미만": {"06", "07"},
+    "8m미만": {"08", "09", "10", "11"},
+    "-": {"12", "00"},
+}
 
 
 def parse_beonji(raw: str):
@@ -106,7 +113,12 @@ def main():
         else:
             mask &= dong_candidates["토지면적"] > row.계약면적
 
-        # 7. 위 조건을 모두 만족하는 후보가 정확히 1건일 때만 매칭 확정(PNU/실제 번지 확정).
+        # 7. 도로조건: 실거래가의 도로조건에 대응하는 토지특성정보 도로접면코드와 일치해야 한다.
+        mask &= dong_candidates["도로접면코드"].isin(
+            ROAD_CONDITION_TO_ROAD_SIDE_CODES.get(row.도로조건, set())
+        )
+
+        # 8. 위 조건을 모두 만족하는 후보가 정확히 1건일 때만 매칭 확정(PNU/실제 번지 확정).
         #    0건이거나 2건 이상 걸리면(특정할 수 없으므로) 매칭하지 않는다.
         hits = dong_candidates[mask]
         if len(hits) == 1:
